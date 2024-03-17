@@ -6,6 +6,10 @@ pub struct CodeGenerator<'a> {
     conf: &'a Config,
 }
 
+// pub enum CodegenTarget {
+//     Typescript
+// }
+
 impl<'a> CodeGenerator<'a> {
     pub fn from_config(conf: &'a Config) -> Self { 
 

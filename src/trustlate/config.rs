@@ -1,37 +1,83 @@
-use serde::Deserialize;
-use std::{error::Error, fs::File};
+use serde::{Deserialize, Serialize};
+use std::{fs::{self, File}, io::Write, path::{Path, PathBuf}};
 
-#[derive(Debug, Deserialize)]
+use super::errors::TrustlateError;
+
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Config {
     pub base_lang: String,
     pub target_langs: Vec<String>,
-    pub codegen: String,
-    pub source_dir: String,
-    pub target_dir: String,
+    pub codegen: CodegenTarget,
+    pub source_dir: PathBuf,
+    pub target_dir: PathBuf,
 }
 
 impl Config {
-    pub fn form_json_file(file: File) -> Result<Self, Box<dyn Error>> {
-        let config: Config = serde_json::from_reader(file)?;
-        Ok(config)
+    pub fn from_file(filepath: &Path) -> Result<Self, TrustlateError> {
+        let f = File::open(filepath).map_err(|_| TrustlateError::OpenConfigFile)?;
+        serde_json::from_reader(f).map_err(|_| TrustlateError::ParseConfigFile)
     }
 
-    pub fn base_lang_filepath(&self) -> (String, String) {
-        (
-            self.base_lang.clone(),
-            format!("{}/{}.json", self.source_dir, self.base_lang),
-        )
-    }
+    pub fn initialize(&self) -> Result<(), TrustlateError> {
+        let config_file = File::create(".trustlaterc.json").map_err(|_| TrustlateError::InitCreateConfigFile)?;
+        serde_json::to_writer_pretty(config_file, &self).map_err(|_| TrustlateError::InitWriteConfigFile)?;
+        fs::create_dir_all(&self.source_dir).map_err(|_| TrustlateError::InitCreateSourceDir)?;
+        fs::create_dir_all(&self.target_dir).map_err(|_| TrustlateError::InitCreateTargetDir)?;
 
-    pub fn target_lang_filepaths(&self) -> Vec<(String, String)> {
-        self.target_langs
-            .iter()
-            .map(|target_lang| {
-                (
-                    target_lang.clone(),
-                    format!("{}/{}.json", self.source_dir, target_lang),
-                )
-            })
-            .collect()
+        let base_file = File::create(self.source_dir.join(format!("{}.json", self.base_lang))).map_err(|_| TrustlateError::InitCreateTranslationsFile)?;
+        serde_json::to_writer_pretty(base_file, &serde_json::json!({"mainPage": { "title": "Hola", "subTitle": "Mundo" }})).map_err(|_| TrustlateError::InitWriteTranslationsExample)?;
+
+        let base_file = File::create(self.source_dir.join(format!("{}.json", self.target_langs[0]))).map_err(|_| TrustlateError::InitCreateTranslationsFile)?;
+        serde_json::to_writer_pretty(base_file, &serde_json::json!({"mainPage": { "title": "Hola", "subTitle": "Mon" }})).map_err(|_| TrustlateError::InitWriteTranslationsExample)?;
+
+        let base_file = File::create(self.source_dir.join(format!("{}.json", self.target_langs[1]))).map_err(|_| TrustlateError::InitCreateTranslationsFile)?;
+        serde_json::to_writer_pretty(base_file, &serde_json::json!({"mainPage": { "title": "Hello", "subTitle": "World" }})).map_err(|_| TrustlateError::InitWriteTranslationsExample)?;
+
+        Ok(())
     }
 }
+
+impl Default for Config {
+    fn default() -> Self {
+        Config {
+            base_lang: "es".to_string(),
+            target_langs: vec!["cat".to_string(), "en".to_string()],
+            codegen: CodegenTarget::Typescript,
+            source_dir: Path::new("./trustlate/translations/").to_path_buf(),
+            target_dir: Path::new("./trustlate/codegens/").to_path_buf()
+        }
+    }
+}
+
+
+
+#[derive(Debug, Deserialize, Serialize)]
+pub enum CodegenTarget {
+    Typescript
+}
+
+// pub struct Config2<'a> {
+//     pub base_lang: &'a str,
+//     pub target_langs: &'a [&'a str],
+//     pub codegen_targets: &'a [codegen::CodegenTarget],
+//     pub input_dir: &'a Path,
+//     pub output_dir: &'a Path
+// }
+//
+// impl<'a> Default for Config2<'a> {
+//     fn default() -> Self {
+//         Self {
+//             base_lang: "es",
+//             target_langs: &["cat", "en"],
+//             codegen_targets: &[CodegenTarget::Typescript],
+//             input_dir: Path::new("./trustlate/inputs"),
+//             output_dir: Path::new("./trustlate/outputs")
+//         }
+//     }
+// }
+//
+// impl<'a> Config2<'a> {
+//     pub fn get_input_filepath(&self) -> &'a Path {
+//         self.input_dir.join(Path::new(""))
+//     }
+// }

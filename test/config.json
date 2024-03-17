@@ -1,6 +1,0 @@
-{
-    "base_lang": "es",
-    "target_langs": ["cat", "en"],
-    "source_dir": "test/translations/inputs",
-    "target_dir": "test/translations/outputs"
-}

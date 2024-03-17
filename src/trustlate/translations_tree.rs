@@ -1,21 +1,41 @@
-use prettytable::Table;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fmt::Display};
 
-#[derive(Debug, Deserialize)]
+use super::errors::{self, TrustlateError};
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct TranslationsTree {
     #[serde(flatten)]
     pub children: HashMap<String, Box<TranslationTreeNode>>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(untagged)]
 pub enum TranslationTreeNode {
     NonLeaf(HashMap<String, Box<TranslationTreeNode>>),
     Leaf(String),
 }
 
+impl TranslationTreeNode {
+    fn blank_values(&mut self, blank_val: String) {
+        match self {
+            TranslationTreeNode::Leaf(val) => *val = blank_val,
+            TranslationTreeNode::NonLeaf(children) => {
+                for (_, v) in children {
+                    v.blank_values(blank_val.clone());
+                }
+            }
+        }
+    }
+}
+
 impl TranslationsTree {
+    pub fn from_file(f: &std::fs::File) -> Result<TranslationsTree, errors::TrustlateError> {
+        let tree = serde_json::from_reader(f)
+            .map_err(|_| TrustlateError::ParseTraslationFileInvalidJson)?;
+        Ok(tree)
+    }
+
     pub fn compare(&self, other: &TranslationsTree) -> Vec<TreeComparisonDifference> {
         let mut differences: Vec<TreeComparisonDifference> = Vec::new();
         let path = TreePath::new();
@@ -73,6 +93,94 @@ impl TranslationsTree {
             }
             _ => {}
         }
+    }
+
+    pub fn harmonize(
+        &mut self,
+        reference: &TranslationsTree,
+        differences: &Vec<TreeComparisonDifference>,
+        filling_str: &str,
+    ) {
+        for diff in differences {
+            match diff {
+                TreeComparisonDifference::DifferentNodeType(path) => {
+                    let ref_node = reference.get_node_at(path);
+                    match &**ref_node {
+                        TranslationTreeNode::Leaf(_) => {
+                            let mut new_node = *ref_node.clone();
+                            new_node.blank_values(filling_str.to_string());
+                            self.replace_node_at(new_node, path);
+                        }
+                        TranslationTreeNode::NonLeaf { .. } => {
+                            let mut new_node = *ref_node.clone();
+                            new_node.blank_values(filling_str.to_string());
+                            self.replace_node_at(new_node, path);
+                        }
+                    }
+                }
+                TreeComparisonDifference::MissingNode(path) => {
+                    let ref_node = reference.get_node_at(path);
+                    let mut new_node = ref_node.clone();
+                    new_node.blank_values(filling_str.to_string());
+                    self.insert_node_at(new_node, path);
+                }
+            }
+        }
+    }
+
+    fn get_node_at(&self, path: &TreePath) -> &Box<TranslationTreeNode> {
+        let mut n = self
+            .children
+            .get(path.0.first().expect("a non empty path"))
+            .expect("an existing node");
+        for link in path.0.iter().skip(1) {
+            match &**n {
+                TranslationTreeNode::NonLeaf(children) => {
+                    n = children.get(link).expect("the children to exist");
+                }
+                TranslationTreeNode::Leaf(_) => panic!(""),
+            }
+        }
+        n
+    }
+
+    fn get_node_at_mut(&mut self, path: &TreePath) -> &mut TranslationTreeNode {
+        let mut n = self
+            .children
+            .get_mut(path.0.first().expect("a non empty path"))
+            .expect("an existing node");
+        for link in path.0.iter().skip(1) {
+            n = match **n {
+                TranslationTreeNode::NonLeaf(ref mut children) => {
+                    children.get_mut(link).expect("the children to exist")
+                }
+                TranslationTreeNode::Leaf(_) => panic!(""),
+            }
+        }
+        n
+    }
+
+    fn insert_node_at(&mut self, node: Box<TranslationTreeNode>, path: &TreePath) {
+        let mut p = path.clone();
+        p.0 = path.0[..path.0.len() - 1].to_vec();
+        let n = if p.0.len() == 0 {
+            self.children.insert(path.0.first().unwrap().clone(), node);
+            return;
+        } else {
+            self.get_node_at_mut(&p)
+        };
+
+        match *n {
+            TranslationTreeNode::NonLeaf(ref mut children) => {
+                children.insert(path.0.last().unwrap().clone(), node);
+            }
+            TranslationTreeNode::Leaf(_) => {}
+        }
+    }
+
+    fn replace_node_at(&mut self, node: TranslationTreeNode, path: &TreePath) {
+        let n = self.get_node_at_mut(path);
+        *n = node;
     }
 }
 
