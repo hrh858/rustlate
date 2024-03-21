@@ -12,5 +12,8 @@ pub enum TrustlateError {
     ParseTraslationFileInvalidJson,
     ParseTranslationFileRepeatedLanguageKey,
     FixTreeCannotOpenSourceFile,
-    FixTreeCannotWriteToSourceFile
+    FixTreeCannotWriteToSourceFile,
+    GenerateCannotCreateOutputFile,
+    GenerateCannotWriteToOutputFile,
+    GenerateCannotGenerateCode
 }

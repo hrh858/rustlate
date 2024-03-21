@@ -37,9 +37,12 @@ enum Commands {
         filling: Option<String>
     },
     /// generates the translation client code for the specified language
-    Generate {
-        language: String, // language: Option<trustlate::config::CodegenTarget>
-    },
+    Generate, 
+    // {
+        // /// programming language in which to generate the code
+        // #[clap(value_enum, default_value_t)]
+        // language: trustlate::config::CodegenTarget,
+    // },
 }
 
 fn main() -> Result<(), trustlate::errors::TrustlateError> {
@@ -63,7 +66,7 @@ fn main() -> Result<(), trustlate::errors::TrustlateError> {
                     &mut translations_trees,
                     filling.as_deref().unwrap_or("[FILLING]"),
                 )?,
-                Commands::Generate { language } => todo!(),
+                Commands::Generate => trustlate::generate_code(&config, &translations_trees)?,
                 _ => unreachable!(),
             }
         }
@@ -71,57 +74,3 @@ fn main() -> Result<(), trustlate::errors::TrustlateError> {
 
     Ok(())
 }
-
-// fn main() -> Result<(), Box<dyn Error>> {
-//     let args: Vec<String> = env::args().collect();
-//     let config_file = File::open(&args[1])?;
-//
-//     let conf = Config::form_json_file(config_file)?;
-//     let parser = Parser::from_config(&conf);
-//     let code_generator = CodeGenerator::from_config(&conf);
-//     let translations_trees = parser.parse_translation_files()?;
-//
-//     let base_lang_tree = translations_trees
-//             .get(parser.base_lang())
-//             .unwrap();
-//
-//     // ⬇︎ Print differences ⬇︎
-//     for target_lang in parser.target_languages() {
-//         let target_lang_tree = translations_trees.get(target_lang).unwrap();
-//         let differences = base_lang_tree.compare(target_lang_tree);
-//
-//         // let mut table = Table::new();
-//         // table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
-//         // table.set_titles(row!["Path", "Error"]);
-//         // for diff in &differences {
-//         //     match diff {
-//         //         TreeComparisonDifference::DifferentNodeType(path) => {
-//         //             table.add_row(Row::new(vec![
-//         //                 Cell::new(&format!("{}", path)),
-//         //                 Cell::new("Different value"),
-//         //             ]));
-//         //         }
-//         //         TreeComparisonDifference::MissingNode(path) => {
-//         //             table.add_row(Row::new(vec![
-//         //                 Cell::new(&format!("{}", path)),
-//         //                 Cell::new("Missing values"),
-//         //             ]));
-//         //         }
-//         //     }
-//         // }
-//         // table.printstd();
-//
-//         // ⬇︎ Harmonize target_lang tree ⬇︎
-//         let mut harmonized_target_lang_tree = target_lang_tree.clone();
-//         harmonized_target_lang_tree.harmonize(base_lang_tree, &differences);
-//         code_generator.generate(&harmonized_target_lang_tree)?;
-//
-//         println!("{}", serde_json::to_string_pretty(&harmonized_target_lang_tree).unwrap());
-//     }
-//
-//
-//
-//     // ⬇︎ Code generation ⬇︎
-//     // code_generator.generate(translations_trees.get("es").unwrap())?;
-//     Ok(())
-// }

@@ -7,7 +7,7 @@ use self::{config::Config, errors::TrustlateError, translations_tree::Translatio
 pub mod config;
 // pub mod parser;
 pub mod translations_tree;
-// pub mod codegen;
+pub mod codegen;
 pub mod errors;
 
 pub fn generate_trees(
@@ -108,4 +108,11 @@ pub fn harmonize_files(
     }
 
     Ok(())
+}
+
+pub fn generate_code(
+    config: &Config,
+    trees: &HashMap<String, TranslationsTree>,
+) -> Result<(), TrustlateError> {
+    codegen::generate(config, trees)
 }

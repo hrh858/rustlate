@@ -51,9 +51,11 @@ impl Default for Config {
 
 
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, clap::ValueEnum, Default, Clone)]
 pub enum CodegenTarget {
-    Typescript
+    /// Generate Typescript code
+    #[default]
+    Typescript,
 }
 
 // pub struct Config2<'a> {
