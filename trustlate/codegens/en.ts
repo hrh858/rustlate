@@ -1,0 +1,1 @@
+export const trustlate={mainPage:{subTitle:"Mundo",title:"Hola"},secondaryPage:{greeting:(name:string,surname:string)=>`Hola ${name} ${surname}`}}as const;

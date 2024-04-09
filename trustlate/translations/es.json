@@ -1,0 +1,9 @@
+{
+  "mainPage": {
+    "subTitle": "Mundo",
+    "title": "Hola"
+  },
+  "secondaryPage": {
+    "greeting": "Hola {{name}} {{surname}}"
+  }
+}

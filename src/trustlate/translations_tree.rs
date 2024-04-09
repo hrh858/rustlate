@@ -1,4 +1,6 @@
+use regex::Regex;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::{collections::HashMap, fmt::Display};
 
 use super::errors::{self, TrustlateError};
@@ -13,13 +15,71 @@ pub struct TranslationsTree {
 #[serde(untagged)]
 pub enum TranslationTreeNode {
     NonLeaf(HashMap<String, Box<TranslationTreeNode>>),
-    Leaf(String),
+    Leaf(LeafType),
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub enum LeafType {
+    LiteralLeaf(String),
+    ParametrizedLeaf {
+        parameters: Vec<String>,
+        raw: String,
+    },
+}
+
+impl<'de> Deserialize<'de> for LeafType {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let value = Value::deserialize(deserializer)?;
+
+        match value {
+            Value::String(value) => {
+                let param_re = Regex::new(r"\{\{(.+?)\}\}").unwrap();
+                if param_re.is_match(&value) {
+                    let params = param_re
+                        .captures_iter(&value)
+                        .filter_map(|caps| caps.get(1))
+                        .map(|mat| mat.as_str().to_string())
+                        .collect();
+                    Ok(LeafType::ParametrizedLeaf {
+                        parameters: params,
+                        raw: value,
+                    })
+                } else {
+                    Ok(LeafType::LiteralLeaf(value))
+                }
+            }
+            _ => Err(serde::de::Error::custom("Only string values are valid")),
+        }
+    }
+}
+
+impl Display for LeafType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            LeafType::LiteralLeaf(val) => write!(f, "\"{}\"", val),
+            LeafType::ParametrizedLeaf { parameters, raw } => {
+                let args = parameters
+                    .iter()
+                    .fold("".to_string(), |acc, el| format!("{}{}:string,", acc, el));
+                // remove the final ","
+                let args = args.strip_suffix(",").unwrap();
+                let mut body = raw.clone();
+                for parameter in parameters {
+                    body = body.replace(&format!("{{{{{}}}}}", parameter), &format!("${{{}}}", parameter));
+                }
+                write!(f, "({})=>`{}`", args, body)
+            }
+        }
+    }
 }
 
 impl TranslationTreeNode {
     fn blank_values(&mut self, blank_val: String) {
         match self {
-            TranslationTreeNode::Leaf(val) => *val = blank_val,
+            TranslationTreeNode::Leaf(val) => *val = LeafType::LiteralLeaf(blank_val),
             TranslationTreeNode::NonLeaf(children) => {
                 for (_, v) in children {
                     v.blank_values(blank_val.clone());

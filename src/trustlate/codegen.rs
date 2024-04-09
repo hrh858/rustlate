@@ -48,7 +48,7 @@ fn genererate_typescript(tree: &TranslationsTree) -> Result<String, TrustlateErr
 
 fn generate_typescript_rec(key: &String, curr_node: &Box<TranslationTreeNode>) -> String {
     match &**curr_node {
-        TranslationTreeNode::Leaf(value) => format!("{}:\"{}\"", key, value),
+        TranslationTreeNode::Leaf(value) => format!("{}:{}", key, value),
         TranslationTreeNode::NonLeaf(children) => {
             let children_code: Vec<String> = children
                 .iter()
