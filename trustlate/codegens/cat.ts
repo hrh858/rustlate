@@ -1,1 +1,1 @@
-export const trustlate={secondaryPage:{greeting:(name:string,surname:string)=>`Hola ${name} ${surname}`},mainPage:{subTitle:"Mundo",title:"Hola"}}as const;
+export const trustlate={thirdPage:{one:"***",numbers:"***"},secondaryPage:{greeting:"***"},mainPage:{title:"***",subTitle:"***"}}as const;

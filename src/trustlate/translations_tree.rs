@@ -1,5 +1,5 @@
 use regex::Regex;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 use serde_json::Value;
 use std::{collections::HashMap, fmt::Display};
 
@@ -18,7 +18,7 @@ pub enum TranslationTreeNode {
     Leaf(LeafType),
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Clone)]
 pub enum LeafType {
     LiteralLeaf(String),
     ParametrizedLeaf {
@@ -52,6 +52,23 @@ impl<'de> Deserialize<'de> for LeafType {
                 }
             }
             _ => Err(serde::de::Error::custom("Only string values are valid")),
+        }
+    }
+}
+
+
+impl Serialize for LeafType {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match self {
+            LeafType::LiteralLeaf(val) => {
+                serializer.serialize_str(val)
+            }
+            LeafType::ParametrizedLeaf { raw, .. } => {
+                serializer.serialize_str(raw)
+            }
         }
     }
 }

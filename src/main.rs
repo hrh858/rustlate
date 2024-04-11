@@ -4,6 +4,8 @@ use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 use trustlate::config::Config;
 
+// TODO: Display version
+
 #[derive(Parser)]
 #[command(about, long_about = None)]
 #[command(name = "trustlate")]
@@ -34,14 +36,14 @@ enum Commands {
     /// structure while filling the missing translations
     Fix {
         #[clap(long, short, action)]
-        filling: Option<String>
+        filling: Option<String>,
     },
     /// generates the translation client code for the specified language
-    Generate, 
+    Generate,
     // {
-        // /// programming language in which to generate the code
-        // #[clap(value_enum, default_value_t)]
-        // language: trustlate::config::CodegenTarget,
+    // /// programming language in which to generate the code
+    // #[clap(value_enum, default_value_t)]
+    // language: trustlate::config::CodegenTarget,
     // },
 }
 
@@ -50,7 +52,11 @@ fn main() -> Result<(), trustlate::errors::TrustlateError> {
     let config = if let Some(config_path) = cli.config {
         Config::from_file(&config_path)?
     } else {
-        Config::default()
+        if let Ok(config) = Config::from_file(std::path::Path::new(".trustlaterc.json")) {
+            config
+        } else {
+            Config::default()
+        }
     };
 
     match &cli.command {

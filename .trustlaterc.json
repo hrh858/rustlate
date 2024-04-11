@@ -1,0 +1,10 @@
+{
+  "base_lang": "es",
+  "target_langs": [
+    "cat",
+    "en"
+  ],
+  "codegen": "Typescript",
+  "source_dir": "./trustlate/translations/",
+  "target_dir": "./trustlate/codegens/"
+}

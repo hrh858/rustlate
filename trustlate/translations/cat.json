@@ -1,9 +1,13 @@
 {
   "mainPage": {
-    "subTitle": "Mundo",
-    "title": "Hola"
+    "title": "***",
+    "subTitle": "***"
+  },
+  "thirdPage": {
+    "one": "***",
+    "numbers": "***"
   },
   "secondaryPage": {
-    "greeting": "Hola {{name}} {{surname}}"
+    "greeting": "***"
   }
 }

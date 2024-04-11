@@ -6,24 +6,68 @@ use super::{
     translations_tree::{TranslationTreeNode, TranslationsTree},
 };
 
+// pub fn generate(
+//     config: &Config,
+//     tree: &HashMap<String, TranslationsTree>,
+// ) -> Result<(), TrustlateError> {
+//     for (key, value) in tree {
+//         let (code, extension) = match config.codegen {
+//             config::CodegenTarget::Typescript => (
+//                 genererate_typescript(value)
+//                     .map_err(|_| TrustlateError::GenerateCannotGenerateCode)?,
+//                 "ts",
+//             ),
+//         };
+//
+//         let mut f = File::create(config.target_dir.join(format!("{}.{}", key, extension)))
+//             .map_err(|err| {
+//                 println!(
+//                     "Path: {:?}",
+//                     config.target_dir.join(format!("{}.{}", key, extension))
+//                 );
+//                 eprint!("Error when creating output file: {}", err);
+//                 TrustlateError::GenerateCannotCreateOutputFile
+//             })?;
+//         write!(f, "{}", code).map_err(|_| TrustlateError::GenerateCannotWriteToOutputFile)?;
+//     }
+//
+//     Ok(())
+// }
+
 pub fn generate(
     config: &Config,
     tree: &HashMap<String, TranslationsTree>,
 ) -> Result<(), TrustlateError> {
-    for (key, value) in tree {
-        let (code, extension) = match config.codegen {
-            config::CodegenTarget::Typescript => (
-                genererate_typescript(value)
-                    .map_err(|_| TrustlateError::GenerateCannotGenerateCode)?,
-                "ts",
-            ),
-        };
-
-        let mut f = File::create(config.target_dir.join(format!("{}.{}", key, extension)))
-            .map_err(|_| TrustlateError::GenerateCannotCreateOutputFile)?;
-        write!(f, "{}", code).map_err(|_| TrustlateError::GenerateCannotWriteToOutputFile)?;
+    match config.codegen {
+        config::CodegenTarget::Typescript => {
+            for (key, value) in tree {
+                let (code, extension) = (
+                    genererate_typescript(value)
+                        .map_err(|_| TrustlateError::GenerateCannotGenerateCode)?,
+                    "ts",
+                );
+                let mut f = File::create(config.target_dir.join(format!("{}.{}", key, extension)))
+                    .map_err(|err| {
+                        println!(
+                            "Path: {:?}",
+                            config.target_dir.join(format!("{}.{}", key, extension))
+                        );
+                        eprint!("Error when creating output file: {}", err);
+                        TrustlateError::GenerateCannotCreateOutputFile
+                    })?;
+                write!(f, "{}", code)
+                    .map_err(|_| TrustlateError::GenerateCannotWriteToOutputFile)?;
+            }
+            let mut f =
+                File::create(config.target_dir.join(format!("index.ts"))).map_err(|err| {
+                    println!("Path: {:?}", config.target_dir.join("index.ts"));
+                    eprint!("Error when creating output file: {}", err);
+                    TrustlateError::GenerateCannotCreateOutputFile
+                })?;
+            write!(f, "{}", generate_typescript_index())
+                .map_err(|_| TrustlateError::GenerateCannotWriteToOutputFile)?;
+        }
     }
-
     Ok(())
 }
 
@@ -44,6 +88,23 @@ fn genererate_typescript(tree: &TranslationsTree) -> Result<String, TrustlateErr
     }
     aux = format!("{{{}}}", aux);
     Ok(format!("{}{}{}", suffix, aux, prefix))
+}
+
+fn generate_typescript_index() -> String {
+    r#"import { trustlate as TranslationsCat } from "./cat";
+import { trustlate as TranslationsEn } from "./en";
+import { trustlate as TranslationsEs } from "./es";
+
+const translations = {
+  "cat": TranslationsCat,
+  "es": TranslationsEs,
+  "en": TranslationsEn
+} as const;
+
+export function trustlate(lang: keyof typeof translations) {
+  return translations[lang]
+}"#
+    .to_string()
 }
 
 fn generate_typescript_rec(key: &String, curr_node: &Box<TranslationTreeNode>) -> String {

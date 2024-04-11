@@ -5,5 +5,9 @@
   },
   "secondaryPage": {
     "greeting": "Hola {{name}} {{surname}}"
+  },
+  "thirdPage": {
+    "one": "Uno",
+    "numbers": "{{num1}}, {{num2}}, {{num3}}"
   }
 }
