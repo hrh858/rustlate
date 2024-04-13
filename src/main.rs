@@ -65,14 +65,20 @@ fn main() -> Result<(), trustlate::errors::TrustlateError> {
             let mut translations_trees = trustlate::generate_trees(&config)?;
             match &cli.command {
                 Commands::Check { show_diffs } => {
-                    trustlate::check_trees(&config, &translations_trees, *show_diffs)
+                    trustlate::check_trees(&config, &translations_trees, *show_diffs);
                 }
                 Commands::Fix { filling } => trustlate::harmonize_files(
                     &config,
                     &mut translations_trees,
                     filling.as_deref().unwrap_or("[FILLING]"),
                 )?,
-                Commands::Generate => trustlate::generate_code(&config, &translations_trees)?,
+                Commands::Generate => {
+                    let ok = trustlate::check_trees(&config, &translations_trees, true);
+                    if ok {
+                        trustlate::generate_code(&config, &translations_trees)?
+                    }
+                }
+
                 _ => unreachable!(),
             }
         }

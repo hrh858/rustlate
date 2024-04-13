@@ -6,9 +6,9 @@ use self::{config::Config, errors::TrustlateError, translations_tree::Translatio
 
 pub mod config;
 // pub mod parser;
-pub mod translations_tree;
 pub mod codegen;
 pub mod errors;
+pub mod translations_tree;
 
 pub fn generate_trees(
     config: &Config,
@@ -32,7 +32,8 @@ pub fn check_trees(
     config: &Config,
     trees: &HashMap<String, TranslationsTree>,
     show_differences: bool,
-) {
+) -> bool {
+    let mut ok = true;
     let base_lang_tree = trees.get(&config.base_lang).unwrap();
 
     for target_lang in &config.target_langs {
@@ -75,7 +76,9 @@ pub fn check_trees(
             table.printstd();
             println!();
         }
+        ok = false;
     }
+    ok
 }
 
 pub fn harmonize_files(

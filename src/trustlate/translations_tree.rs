@@ -27,6 +27,18 @@ pub enum LeafType {
     },
 }
 
+impl PartialEq for LeafType {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::LiteralLeaf(_), Self::LiteralLeaf(_)) => true,
+            (Self::ParametrizedLeaf { parameters: params_a, .. }, Self::ParametrizedLeaf { parameters: params_b, ..} ) => {
+                params_a == params_b
+            },
+            _ => false,
+        }
+    }
+}
+
 impl<'de> Deserialize<'de> for LeafType {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -168,7 +180,12 @@ impl TranslationsTree {
             (TranslationTreeNode::Leaf(_), TranslationTreeNode::NonLeaf(_)) => {
                 differences.push(TreeComparisonDifference::DifferentNodeType(path.clone()))
             }
-            _ => {}
+            (TranslationTreeNode::Leaf(type_a), TranslationTreeNode::Leaf(type_b)) => {
+                if *type_a != *type_b {
+                    differences.push(TreeComparisonDifference::DifferentNodeType(path.clone()))
+                }
+            }
+            // _ => {}
         }
     }
 
@@ -293,4 +310,5 @@ impl Display for TreePath {
 pub enum TreeComparisonDifference {
     MissingNode(TreePath),
     DifferentNodeType(TreePath),
+    DifferentParameters(TreePath),
 }
