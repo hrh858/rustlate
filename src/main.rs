@@ -9,7 +9,7 @@ use trustlate::config::Config;
 #[derive(Parser)]
 #[command(about, long_about = None)]
 #[command(name = "trustlate")]
-#[command(about = "A helpful app for safely managing ans generating translation clients for your app", long_about = None)]
+#[command(about = "A helpful utility for safely managing and generating translations for your project", long_about = None)]
 struct Cli {
     /// path to the .json file containing the configuration that trustlate should use
     #[arg(short, long, value_name = "FILE")]
