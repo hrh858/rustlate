@@ -1,5 +1,9 @@
 use serde::{Deserialize, Serialize};
-use std::{fs::{self, File}, io::Write, path::{Path, PathBuf}};
+use std::{
+    fs::{self, File},
+    io::Write,
+    path::{Path, PathBuf},
+};
 
 use super::errors::TrustlateError;
 
@@ -19,19 +23,34 @@ impl Config {
     }
 
     pub fn initialize(&self) -> Result<(), TrustlateError> {
-        let config_file = File::create(".trustlaterc.json").map_err(|_| TrustlateError::InitCreateConfigFile)?;
-        serde_json::to_writer_pretty(config_file, &self).map_err(|_| TrustlateError::InitWriteConfigFile)?;
+        let config_file =
+            File::create(".trustlaterc.json").map_err(|_| TrustlateError::InitCreateConfigFile)?;
+        serde_json::to_writer_pretty(config_file, &self)
+            .map_err(|_| TrustlateError::InitWriteConfigFile)?;
         fs::create_dir_all(&self.source_dir).map_err(|_| TrustlateError::InitCreateSourceDir)?;
         fs::create_dir_all(&self.target_dir).map_err(|_| TrustlateError::InitCreateTargetDir)?;
 
-        let base_file = File::create(self.source_dir.join(format!("{}.json", self.base_lang))).map_err(|_| TrustlateError::InitCreateTranslationsFile)?;
-        serde_json::to_writer_pretty(base_file, &serde_json::json!({"mainPage": { "title": "Hola", "subTitle": "Mundo" }})).map_err(|_| TrustlateError::InitWriteTranslationsExample)?;
+        let base_file = File::create(self.source_dir.join(format!("{}.json", self.base_lang)))
+            .map_err(|_| TrustlateError::InitCreateTranslationsFile)?;
+        serde_json::to_writer_pretty(base_file, &serde_json::json!({"examples": { "helloWorld": "Hola, Mundo!", "greeting": "Encantado de conocerte {{name}}!" }})).map_err(|_| TrustlateError::InitWriteTranslationsExample)?;
 
-        let base_file = File::create(self.source_dir.join(format!("{}.json", self.target_langs[0]))).map_err(|_| TrustlateError::InitCreateTranslationsFile)?;
-        serde_json::to_writer_pretty(base_file, &serde_json::json!({"mainPage": { "title": "Hola", "subTitle": "Mon" }})).map_err(|_| TrustlateError::InitWriteTranslationsExample)?;
+        let base_file = File::create(
+            self.source_dir
+                .join(format!("{}.json", self.target_langs[0])),
+        )
+        .map_err(|_| TrustlateError::InitCreateTranslationsFile)?;
+        serde_json::to_writer_pretty(base_file, &serde_json::json!({"examples": { "helloWorld": "헬로, 월드!", "greeting": "{{name}} 만나서  방아워요!" }})).map_err(|_| TrustlateError::InitWriteTranslationsExample)?;
 
-        let base_file = File::create(self.source_dir.join(format!("{}.json", self.target_langs[1]))).map_err(|_| TrustlateError::InitCreateTranslationsFile)?;
-        serde_json::to_writer_pretty(base_file, &serde_json::json!({"mainPage": { "title": "Hello", "subTitle": "World" }})).map_err(|_| TrustlateError::InitWriteTranslationsExample)?;
+        let base_file = File::create(
+            self.source_dir
+                .join(format!("{}.json", self.target_langs[1])),
+        )
+        .map_err(|_| TrustlateError::InitCreateTranslationsFile)?;
+        serde_json::to_writer_pretty(
+            base_file,
+            &serde_json::json!({"examples": { "helloWorld": "Hello, World!", "greeting": "Nice to meet you {{name}}" }}),
+        )
+        .map_err(|_| TrustlateError::InitWriteTranslationsExample)?;
 
         Ok(())
     }
@@ -41,15 +60,13 @@ impl Default for Config {
     fn default() -> Self {
         Config {
             base_lang: "es".to_string(),
-            target_langs: vec!["cat".to_string(), "en".to_string()],
+            target_langs: vec!["kr".to_string(), "en".to_string()],
             codegen: CodegenTarget::Typescript,
             source_dir: Path::new("./trustlate/translations/").to_path_buf(),
-            target_dir: Path::new("./trustlate/codegens/").to_path_buf()
+            target_dir: Path::new("./trustlate/codegens/").to_path_buf(),
         }
     }
 }
-
-
 
 #[derive(Debug, Deserialize, Serialize, clap::ValueEnum, Default, Clone)]
 pub enum CodegenTarget {

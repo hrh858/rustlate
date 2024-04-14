@@ -91,12 +91,12 @@ fn genererate_typescript(tree: &TranslationsTree) -> Result<String, TrustlateErr
 }
 
 fn generate_typescript_index() -> String {
-    r#"import { trustlate as TranslationsCat } from "./cat";
+    r#"import { trustlate as TranslationsKr } from "./kr";
 import { trustlate as TranslationsEn } from "./en";
 import { trustlate as TranslationsEs } from "./es";
 
 const translations = {
-  "cat": TranslationsCat,
+  "kr": TranslationsKr,
   "es": TranslationsEs,
   "en": TranslationsEn
 } as const;

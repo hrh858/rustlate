@@ -212,7 +212,7 @@ impl TranslationsTree {
                         }
                     }
                 }
-                TreeComparisonDifference::MissingNode(path) => {
+                TreeComparisonDifference::MissingNode(path) | TreeComparisonDifference::DifferentParameters(path) => {
                     let ref_node = reference.get_node_at(path);
                     let mut new_node = ref_node.clone();
                     new_node.blank_values(filling_str.to_string());

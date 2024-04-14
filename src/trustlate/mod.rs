@@ -71,12 +71,18 @@ pub fn check_trees(
                             Cell::new("Missing values"),
                         ]));
                     }
+                    TreeComparisonDifference::DifferentParameters(path) => {
+                        table.add_row(Row::new(vec![
+                            Cell::new(&format!("{}", path)),
+                            Cell::new("Incompatible parameters"),
+                        ]));
+                    }
                 }
             }
             table.printstd();
             println!();
-        }
         ok = false;
+        }
     }
     ok
 }
