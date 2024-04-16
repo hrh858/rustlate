@@ -21,6 +21,8 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Shows the current version of trustlate
+    Version,
     /// initializes default directories and configuration for trustlate to work (and for easy
     /// customizaition)
     Init,
@@ -60,6 +62,7 @@ fn main() -> Result<(), trustlate::errors::TrustlateError> {
     };
 
     match &cli.command {
+        Commands::Version => println!("0.1.0"),
         Commands::Init => config.initialize()?,
         _ => {
             let mut translations_trees = trustlate::generate_trees(&config)?;
@@ -78,7 +81,6 @@ fn main() -> Result<(), trustlate::errors::TrustlateError> {
                         trustlate::generate_code(&config, &translations_trees)?
                     }
                 }
-
                 _ => unreachable!(),
             }
         }
