@@ -32,7 +32,7 @@ impl PartialEq for LeafType {
         match (self, other) {
             (Self::LiteralLeaf(_), Self::LiteralLeaf(_)) => true,
             (Self::ParametrizedLeaf { parameters: params_a, .. }, Self::ParametrizedLeaf { parameters: params_b, ..} ) => {
-                params_a == params_b
+                params_a.iter().all(|param| params_b.contains(param))
             },
             _ => false,
         }
