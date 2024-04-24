@@ -64,7 +64,9 @@ pub fn generate(
                     eprint!("Error when creating output file: {}", err);
                     TrustlateError::GenerateCannotCreateOutputFile
                 })?;
-            write!(f, "{}", generate_typescript_index())
+            let mut langs: Vec<&str> = config.target_langs.iter().map(|l| l.as_str()).collect();
+            langs.push(&config.base_lang);
+            write!(f, "{}", generate_typescript_index(&langs))
                 .map_err(|_| TrustlateError::GenerateCannotWriteToOutputFile)?;
         }
     }
@@ -90,21 +92,53 @@ fn genererate_typescript(tree: &TranslationsTree) -> Result<String, TrustlateErr
     Ok(format!("{}{}{}", suffix, aux, prefix))
 }
 
-fn generate_typescript_index() -> String {
-    r#"import { trustlate as TranslationsKr } from "./kr";
-import { trustlate as TranslationsEn } from "./en";
-import { trustlate as TranslationsEs } from "./es";
+fn generate_typescript_index(langs: &[&str]) -> String {
+    let imports = langs.iter().fold("".to_string(), |prev, curr| {
+        format!(
+            "{}import {{ trustlate as Translations{} }} from \"./{}\";\n",
+            prev,
+            curr.to_uppercase(),
+            curr
+        )
+    });
 
-const translations = {
-  "kr": TranslationsKr,
-  "es": TranslationsEs,
-  "en": TranslationsEn
-} as const;
+    let locales = format!(
+        "export const locales = [{}] as const;",
+        langs
+            .iter()
+            .fold("".to_string(), |prev, curr| format!("{}'{}', ", prev, curr))
+    );
 
-export function trustlate(lang: keyof typeof translations) {
-  return translations[lang]
-}"#
-    .to_string()
+    let translations = format!(
+        "const translations = {{\n{}}} as const;",
+        langs.iter().fold("".to_string(), |prev, curr| format!(
+            "{}\t\"{}\": Translations{},\n",
+            prev,
+            curr,
+            curr.to_uppercase()
+        ))
+    );
+
+    format!("{}\n{}\nexport type Locale = typeof locales[number];\n\n{}\n\nexport function trustlate(lang: keyof typeof translations) {{ return translations[lang] }}", imports,locales,translations)
+
+    //     format!(
+    //         r#"import {{ trustlate as TranslationsKr }} from "./kr";
+    // import {{ trustlate as TranslationsEn }} from "./en";
+    // import {{ trustlate as TranslationsEs }} from "./es";
+    //
+    // export const locales = ['es', 'en', 'cat'] as const;
+    // export type Locale = typeof locales[number];
+    //
+    // const translations = {{
+    //   "kr": TranslationsKr,
+    //   "es": TranslationsEs,
+    //   "en": TranslationsEn
+    // }} as const;
+    //
+    // export function trustlate(lang: keyof typeof translations) {{
+    //   return translations[lang]
+    // }}"#
+    //     )
 }
 
 fn generate_typescript_rec(key: &String, curr_node: &Box<TranslationTreeNode>) -> String {

@@ -45,10 +45,10 @@ So far building from source is the only supported way of getting the binary, the
  ```
 
  7. Finally you have to add the generated binary at `./target/release/trustlate` to the path.  
- This is how yuo would do it for bash:  
+ This is how yuo would do it for bash. Add the follwing line at the end of your `.bashrc` file:  
  ```
  PATH=$PATH:~/opt/bin
- ```  
+ ``` 
  If you're using another shell please search on how to add a new binary to the path for such shell.  
 
 8. **(OPTIONAL)** Ideally you will integrate trustlate commands into your current workflow so you won't be interacting with trustulate 
@@ -57,16 +57,16 @@ In that case crating an alias may help.
 This is how you would create a `trlt` alias for trustlate in bash:
 ```
 echo "alias trustlate='trlt'" >> ~/.bashrc
-```  
+```
 If you're using another shell please search on how to add an alias.
 
 ## Initialization
-You can run the initialization command to create a default configuration file and a set of dummy translations that you 
+You can run the initialization command to create a default [configuration file](#initialization) and a set of dummy example [translations files](#translation-files) that you 
 can start working from.
 
 ## Configuration
 The configuration file will be created for you if you initialized trustlate following [the previous section](#initialization).  
-It consist on a JSON file called `.trsutlaterc.json` that contains the following fields:  
+It consist on a JSON file called `.trustlaterc.json` that contains the following fields:  
 | Field | Type | Default Value | Description |
 |-------|------|---------------|-------------|
 | base_lang | string | es | TODO |
