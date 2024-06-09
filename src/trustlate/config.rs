@@ -72,7 +72,10 @@ impl Default for Config {
 pub enum CodegenTarget {
     /// Generate Typescript code
     #[default]
+    #[serde(rename = "ts", alias = "typescript")]
     Typescript,
+    #[serde(rename = "go", alias = "golang")]
+    Go,
 }
 
 // pub struct Config2<'a> {

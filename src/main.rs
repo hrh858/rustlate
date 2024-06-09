@@ -1,5 +1,4 @@
 mod trustlate;
-
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 use trustlate::config::Config;

@@ -81,7 +81,7 @@ pub fn check_trees(
             }
             table.printstd();
             println!();
-        ok = false;
+            ok = false;
         }
     }
     ok
