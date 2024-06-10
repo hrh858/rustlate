@@ -3,8 +3,6 @@ use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 use trustlate::config::Config;
 
-// TODO: Display version
-
 #[derive(Parser)]
 #[command(about, long_about = None)]
 #[command(name = "trustlate")]
@@ -61,7 +59,7 @@ fn main() -> Result<(), trustlate::errors::TrustlateError> {
     };
 
     match &cli.command {
-        Commands::Version => println!("0.1.0"),
+        Commands::Version => println!("0.2.0"),
         Commands::Init => config.initialize()?,
         _ => {
             let mut translations_trees = trustlate::generate_trees(&config)?;
