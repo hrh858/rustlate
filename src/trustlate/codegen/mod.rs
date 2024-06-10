@@ -52,7 +52,6 @@ pub fn generate(
                     .map_err(|_| TrustlateError::GenerateCannotGenerateCode)?;
 
                 if is_main_lang {
-                    println!("Lang is {lang}");
                     content += "type Trustlate interface {\n";
                     for gen in &generations {
                         content += &("    ".to_string() + &gen.interface_entry_form() + "\n");
