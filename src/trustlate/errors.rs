@@ -14,6 +14,7 @@ pub enum TrustlateError {
     FixTreeCannotOpenSourceFile,
     FixTreeCannotWriteToSourceFile,
     GenerateCannotCreateOutputFile,
+    GenerateCannotCreateOutputFolders,
     GenerateCannotWriteToOutputFile,
-    GenerateCannotGenerateCode
+    GenerateCannotGenerateCode,
 }

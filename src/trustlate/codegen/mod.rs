@@ -1,7 +1,11 @@
 pub mod go;
 pub mod typescript;
 
-use std::{collections::HashMap, fs::File, io::Write};
+use std::{
+    collections::HashMap,
+    fs::{self, File},
+    io::Write,
+};
 
 use go::generate_golang;
 use typescript::{generate_typescript_index, genererate_typescript};
@@ -40,7 +44,9 @@ pub fn generate(
         }
         CodegenTarget::Go => {
             let mut content = String::from("package trustlate\n\nimport \"fmt\"\n\n");
+            let mut langs: Vec<&String> = vec![];
             for (lang, translations) in tree {
+                langs.push(lang);
                 let is_main_lang = config.base_lang == *lang;
                 let generations = generate_golang(translations.clone(), lang)
                     .map_err(|_| TrustlateError::GenerateCannotGenerateCode)?;
@@ -58,18 +64,32 @@ pub fn generate(
                 for gen in &generations {
                     content += format!("{}\n\n", gen.function_form()).as_str();
                 }
-                // TODO: Save to a file 'trustlate.go'
-
-                //         .map_err(|_| TrustlateError::GenerateCannotGenerateCode)
-                // let (generation, extension) = (
-                //     &generate_golang(translations.clone())
-                //         .map_err(|_| TrustlateError::GenerateCannotGenerateCode)?,
-                //     "go",
-                // );
-                // save_translation_file(config, lang, extension, &code)?;
             }
-            println!("{}", content);
-            todo!();
+            for lang in &langs {
+                content += format!(
+                    "var trustlate{} = Trustlate{}{{}}\n",
+                    lang.to_uppercase(),
+                    lang.to_uppercase()
+                )
+                .as_str();
+            }
+            content += "\n";
+            content += format!("func GetTrustlate(lang string) Trustlate {{\n    switch lang {{\n")
+                .as_str();
+            for lang in &langs {
+                content += format!(
+                    "    case \"{lang}\":\n      return &trustlate{}\n",
+                    lang.to_uppercase()
+                )
+                .as_str();
+            }
+            content += format!(
+                "    default:\n     return &trustlate{}\n   }}\n}}",
+                langs.first().unwrap().to_uppercase()
+            )
+            .as_str();
+
+            save_translation_file(config, "trustlate", "go", &content)?;
         }
     }
     Ok(())
@@ -77,16 +97,22 @@ pub fn generate(
 
 fn save_translation_file(
     config: &Config,
-    lang: &str,
+    filename_stem: &str,
     extension: &str,
     code: &str,
 ) -> Result<(), TrustlateError> {
-    let mut f =
-        File::create(config.target_dir.join(format!("{}.{}", lang, extension))).map_err(|err| {
-            println!(
-                "Path: {:?}",
-                config.target_dir.join(format!("{}.{}", lang, extension))
-            );
+    let filepath = config
+        .target_dir
+        .join(format!("{}.{}", filename_stem, extension));
+    fs::create_dir_all(&filepath.as_path().parent().unwrap())
+        .map_err(|_| TrustlateError::GenerateCannotCreateOutputFolders)?;
+    let mut f = File::options()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(&filepath)
+        .map_err(|err| {
+            println!("Path: {:?}", filepath);
             eprint!("Error when creating output file: {}", err);
             TrustlateError::GenerateCannotCreateOutputFile
         })?;
