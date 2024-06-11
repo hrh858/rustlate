@@ -7,7 +7,7 @@ It offers the following features:
 - [Help you write literal and parametrized translations using JSON files.](#translation-files)
 - Check if all of your translation files comply with the base translations.
 - Auto-fill the missing fields in the non-complying translation files.
-- Generate ready-to-use clients for your programming language (currently, only Typescript is supported).
+- Generate ready-to-use clients for your programming language (currently, Typescript and Go (Golang) are supported).
 
 ## Installation
 So far building from source is the only supported way of getting the binary, these are the steps to follow:
@@ -71,7 +71,7 @@ It consist on a JSON file called `.trustlaterc.json` that contains the following
 |-------|------|---------------|-------------|
 | base_lang | string | es | TODO |
 | target_langs | string[] | ["kr", "es"] | TODO |
-| codegen | string | "Typescript" | TODO |
+| codegen | string | "typescript" | TODO |
 | source_dir | string | "./trustlate/translations/" | TODO |
 | target_dir | string | "./trustlate/codegens/" | TODO |
 
