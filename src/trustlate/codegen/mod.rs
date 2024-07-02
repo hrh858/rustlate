@@ -88,6 +88,8 @@ pub fn generate(
             )
             .as_str();
 
+            content += format!("\n\nfunc _ignore() {{\n  fmt.Printf(\"ignore\")\n}}").as_str();
+
             save_translation_file(config, "trustlate", "go", &content)?;
         }
     }
